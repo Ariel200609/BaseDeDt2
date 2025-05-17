@@ -1,16 +1,39 @@
-use('empresa')
 
-db.empleados.insertMany([
+db.empleados.updateOne(
+    { nombre: 'Luis' },
     {
-        nombre: 'Luis',
-        direccion: { calle: 'salta 27', ciudad: 'Bahía Blanca', codigo_postal: 8000 }
-    },
-    {
-        nombre: 'Ana',
-        direccion: { calle: 'av. colon 200', ciudad: 'Bahía Blanca', codigo_postal: 8000 }
-    },
-    {
-        nombre: 'Juan',
-        direccion: { calle: 'Zelarrayan 789', ciudad: 'Bahía Blanca', codigo_postal: 8000 }
+        $set: {
+            direccion: {
+                calle: 'salta 27',
+                ciudad: 'Bahía Blanca',
+                codigo_postal: 8000
+            }
+        }
     }
-])
+)
+
+db.empleados.updateOne(
+    { nombre: 'Ana' },
+    {
+        $set: {
+            direccion: {
+                calle: 'av. colon 200',
+                ciudad: 'Bahía Blanca',
+                codigo_postal: 8000
+            }
+        }
+    }
+)
+
+db.empleados.updateOne(
+    { nombre: 'Juan' },
+    {
+        $set: {
+            direccion: {
+                calle: 'Zelarrayan 789',
+                ciudad: 'Bahía Blanca',
+                codigo_postal: 8000
+            }
+        }
+    }
+)
