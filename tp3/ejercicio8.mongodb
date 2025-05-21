@@ -1,0 +1,37 @@
+db.ventas.aggregate([
+{
+    $group: {
+    _id: "$producto_id",
+    total_unidades_vendidas: { $sum: "$cantidad" },
+    monto_total_generado: { $sum: "$total" }
+    }
+},
+{
+    $sort: { total_unidades_vendidas: -1 }
+},
+{
+    $limit: 3
+},
+{
+    $lookup: {
+    from: "productos",
+    localField: "_id",
+    foreignField: "_id",
+    as: "producto_info"
+    }
+},
+{
+    $unwind: "$producto_info"
+},
+{
+    $project: {
+    nombre: "$producto_info.nombre",
+    categoria: "$producto_info.categoria",
+    total_unidades_vendidas: 1,
+    monto_total_generado: 1,
+    puntuacion_promedio: {
+        $avg: "$producto_info.valoraciones.puntuacion"
+    }
+    }
+}
+]);

@@ -1,0 +1,55 @@
+db.productos.aggregate([
+{
+    $project: {
+    nombre: 1,
+    precio: 1,
+    Categoria_Producto: {
+        $cond: {
+        if: { $lt: ["$precio", 100] },
+        then: "Económico",
+        else: {
+            $cond: {
+            if: { $lte: ["$precio", 500] },
+            then: "Estándar",
+            else: "Premium"
+            }
+        }
+        }
+    }
+    }
+},
+{
+    $group: {
+    _id: "$Categoria_Producto",
+    productos: { $push: "$nombre" }
+    }
+}
+]);
+db.ventas.aggregate([
+{
+    $project: {
+    _id: 1,
+    cliente: 1,
+    total: 1,
+    Categoria_Venta: {
+        $cond: {
+        if: { $lt: ["$total", 200] },
+        then: "Pequeña",
+        else: {
+            $cond: {
+            if: { $lte: ["$total", 800] },
+            then: "Mediana",
+            else: "Grande"
+            }
+        }
+        }
+    }
+    }
+},
+{
+    $group: {
+    _id: "$Categoria_Venta",
+    ventas: { $push: "$_id" }
+    }
+}
+]);

@@ -1,0 +1,18 @@
+
+db.ventas.aggregate([
+    {
+        $project: {
+            mes: { $month: "$fecha" },
+            monto: 1
+        }
+    },
+    {
+        $group: {
+            _id: "$mes",
+            totalVendido: { $sum: "$monto" }
+        }
+    },
+    {
+        $sort: { totalVendido: -1 }
+    }
+]);
