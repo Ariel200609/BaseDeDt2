@@ -1,0 +1,68 @@
+// Limpieza del grafo
+MATCH (n) DETACH DELETE n;
+
+// Crear estudiantes
+CREATE (:Estudiante {nombre: "Bruno", legajo: 200});
+CREATE (:Estudiante {nombre: "Valentina", legajo: 201});
+CREATE (:Estudiante {nombre: "Mateo", legajo: 202});
+
+// Crear materias
+CREATE (:Materia {nombre: "Matemática I"});
+CREATE (:Materia {nombre: "Programación I"});
+CREATE (:Materia {nombre: "Programación II"});
+
+// Prerrequisito
+MATCH (m1:Materia {nombre: "Programación I"}), (m2:Materia {nombre: "Programación II"})
+CREATE (m2)-[:PRERREQUISITO_DE]->(m1);
+
+// Crear cursos
+CREATE (:Curso {codigo: "C1", cuatrimestre: "1C2025"});
+CREATE (:Curso {codigo: "C2", cuatrimestre: "1C2025"});
+CREATE (:Curso {codigo: "C3", cuatrimestre: "2C2025"});
+CREATE (:Curso {codigo: "C4", cuatrimestre: "2C2025"});
+
+// Relacionar cursos con materias
+MATCH (c:Curso {codigo: "C1"}), (m:Materia {nombre: "Matemática I"})
+CREATE (c)-[:CORRESPONDE_A]->(m);
+MATCH (c:Curso {codigo: "C2"}), (m:Materia {nombre: "Programación I"})
+CREATE (c)-[:CORRESPONDE_A]->(m);
+MATCH (c:Curso {codigo: "C3"}), (m:Materia {nombre: "Programación II"})
+CREATE (c)-[:CORRESPONDE_A]->(m);
+MATCH (c:Curso {codigo: "C4"}), (m:Materia {nombre: "Matemática I"})
+CREATE (c)-[:CORRESPONDE_A]->(m);
+
+// Inscripciones con nota final
+MATCH (e:Estudiante {legajo: 200}), (c:Curso {codigo: "C1"})
+CREATE (e)-[:INSCRIPTO_EN {nota_final: 8}]->(c);
+MATCH (e:Estudiante {legajo: 200}), (c:Curso {codigo: "C2"})
+CREATE (e)-[:INSCRIPTO_EN {nota_final: 7}]->(c);
+MATCH (e:Estudiante {legajo: 200}), (c:Curso {codigo: "C3"})
+CREATE (e)-[:INSCRIPTO_EN {nota_final: 6}]->(c);
+MATCH (e:Estudiante {legajo: 201}), (c:Curso {codigo: "C1"})
+CREATE (e)-[:INSCRIPTO_EN {nota_final: 6}]->(c);
+MATCH (e:Estudiante {legajo: 202}), (c:Curso {codigo: "C4"})
+CREATE (e)-[:INSCRIPTO_EN {nota_final: 5}]->(c);
+
+// CONSULTAS
+
+// Transcripción académica
+MATCH (e:Estudiante {legajo: 200})-[i:INSCRIPTO_EN]->(c:Curso)-[:CORRESPONDE_A]->(m:Materia)
+RETURN e.nombre AS Estudiante, m.nombre AS Materia, i.nota_final AS Nota;
+
+// Verificar si puede inscribirse en una materia con prerrequisito
+MATCH (e:Estudiante {legajo: 200}),
+      (m:Materia {nombre: "Programación II"})-[:PRERREQUISITO_DE]->(prereq:Materia),
+      (c:Curso)-[:CORRESPONDE_A]->(prereq),
+      (e)-[i:INSCRIPTO_EN]->(c)
+WHERE i.nota_final >= 6
+RETURN e.nombre AS Estudiante, prereq.nombre AS Prerrequisito, i.nota_final AS Nota, "Puede inscribirse" AS Estado;
+
+// Promedio por estudiante
+MATCH (e:Estudiante)-[i:INSCRIPTO_EN]->(:Curso)
+RETURN e.nombre AS Estudiante, ROUND(AVG(i.nota_final),2) AS Promedio;
+
+// Materias con promedio < 7
+MATCH (:Estudiante)-[i:INSCRIPTO_EN]->(c:Curso)-[:CORRESPONDE_A]->(m:Materia)
+WITH m.nombre AS Materia, AVG(i.nota_final) AS Promedio
+WHERE Promedio < 7
+RETURN Materia, ROUND(Promedio,2) AS Promedio;

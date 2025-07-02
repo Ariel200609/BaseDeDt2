@@ -1,0 +1,57 @@
+// Limpieza del grafo
+MATCH (n) DETACH DELETE n;
+
+// Crear departamentos
+CREATE (:Departamento {nombre: "Desarrollo"});
+CREATE (:Departamento {nombre: "Marketing"});
+CREATE (:Departamento {nombre: "Recursos Humanos"});
+
+// Crear empleados
+CREATE (:Empleado {nombre: "Lucía", legajo: 100});
+CREATE (:Empleado {nombre: "Carlos", legajo: 101});
+CREATE (:Empleado {nombre: "Ana", legajo: 102});
+
+// Relacionar empleados con departamentos
+MATCH (e:Empleado {legajo: 100}), (d:Departamento {nombre: "Desarrollo"})
+CREATE (e)-[:PERTENECE_A]->(d);
+MATCH (e:Empleado {legajo: 101}), (d:Departamento {nombre: "Marketing"})
+CREATE (e)-[:PERTENECE_A]->(d);
+MATCH (e:Empleado {legajo: 102}), (d:Departamento {nombre: "Recursos Humanos"})
+CREATE (e)-[:PERTENECE_A]->(d);
+
+// Crear proyectos
+CREATE (:Proyecto {nombre: "WebApp V1"});
+CREATE (:Proyecto {nombre: "Campaña Redes"});
+
+// Asignar empleados a proyectos con horas semanales
+MATCH (e:Empleado {legajo: 100}), (p:Proyecto {nombre: "WebApp V1"})
+CREATE (e)-[:ASIGNADO_A {horas_semanales: 20}]->(p);
+MATCH (e:Empleado {legajo: 101}), (p:Proyecto {nombre: "WebApp V1"})
+CREATE (e)-[:ASIGNADO_A {horas_semanales: 10}]->(p);
+MATCH (e:Empleado {legajo: 101}), (p:Proyecto {nombre: "Campaña Redes"})
+CREATE (e)-[:ASIGNADO_A {horas_semanales: 15}]->(p);
+MATCH (e:Empleado {legajo: 102}), (p:Proyecto {nombre: "Campaña Redes"})
+CREATE (e)-[:ASIGNADO_A {horas_semanales: 10}]->(p);
+
+// Asignar líderes
+MATCH (e:Empleado {legajo: 100}), (p:Proyecto {nombre: "WebApp V1"})
+CREATE (e)-[:LIDERA]->(p);
+MATCH (e:Empleado {legajo: 101}), (p:Proyecto {nombre: "Campaña Redes"})
+CREATE (e)-[:LIDERA]->(p);
+
+// CONSULTAS
+
+// Obtener nombre del proyecto, su líder y empleados asignados
+MATCH (p:Proyecto)<-[:LIDERA]-(lider:Empleado),
+      (e:Empleado)-[:ASIGNADO_A]->(p)
+RETURN p.nombre AS Proyecto, lider.nombre AS Lider, collect(e.nombre) AS Empleados_Asignados;
+
+// Calcular total de horas semanales por proyecto
+MATCH (e:Empleado)-[a:ASIGNADO_A]->(p:Proyecto)
+RETURN p.nombre AS Proyecto, SUM(a.horas_semanales) AS Total_Horas_Semanales;
+
+// Empleados que trabajan en más de un proyecto
+MATCH (e:Empleado)-[:ASIGNADO_A]->(p:Proyecto)
+WITH e, COUNT(DISTINCT p) AS proyectos
+WHERE proyectos > 1
+RETURN e.nombre AS Empleado, proyectos;
